@@ -1,6 +1,8 @@
 import axios from "axios";
 import { z } from "zod";
+// import { object, string, number, InferOutput, parse } from "valibot";
 import type { SearchType } from "../types";
+import { useState } from "react";
 
 // TYPE GUARD OR ASSERTION
 // function isWeatherResponse(weather: unknown): weather is Weather {
@@ -23,13 +25,31 @@ const Weather = z.object({
     temp_min: z.number(),
   }),
 });
+export type Weather = z.infer<typeof Weather>;
 
-type Weather = z.infer<typeof Weather>;
-
-const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
+// Valibot
+// const WeatherSchema = object({
+//   name: string(),
+//   main: object({
+//     temp: number(),
+//     temp_max: number(),
+//     temp_min: number(),
+//   }),
+// });
+// type Weather = InferOutput<typeof WeatherSchema>;
 
 export default function useWeather() {
+  const [weather, setWeather] = useState<Weather>({
+    name: "",
+    main: {
+      temp: 0,
+      temp_max: 0,
+      temp_min: 0,
+    },
+  });
+
   const fetchWeather = async (search: SearchType) => {
+    const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
     try {
       const { city, country } = search;
       const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city},${country}&appid=${apiKey}`;
@@ -41,9 +61,8 @@ export default function useWeather() {
 
       const { data: weatherResult } = await axios(weatherUrl);
 
-      // TYPE ZOD
-      // const result = Weather.safeParse(weatherResult);
-      // console.log(result);
+      // CAST THE TYPE
+      // const { data: weatherResult } = await axios<Weather>(weatherUrl);
 
       // TYPE GUARDS
       // const result = isWeatherResponse(weatherResult);
@@ -52,9 +71,22 @@ export default function useWeather() {
       //   console.log(weatherResult.name);
       //   console.log(weatherResult.main);
       // }
+
+      // TYPE ZOD
+      const result = Weather.safeParse(weatherResult);
+      console.log(result);
+
+      if (result.success) {
+        setWeather(result.data);
+      } else {
+        throw new Error(result.error.message);
+      }
+
+      // VALIBOT
+      // const result = parse(WeatherSchema, weatherResult);
     } catch (error) {
       console.log(error);
     }
   };
-  return { fetchWeather };
+  return { weather, fetchWeather };
 }
