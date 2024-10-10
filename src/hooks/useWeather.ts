@@ -1,17 +1,30 @@
 import axios from "axios";
-import type { SearchType, Weather } from "../types";
+import { z } from "zod";
+import type { SearchType } from "../types";
 
 // TYPE GUARD OR ASSERTION
-function isWeatherResponse(weather: unknown): weather is Weather {
-  return (
-    Boolean(weather) &&
-    typeof weather === "object" &&
-    typeof (weather as Weather).name === "string" &&
-    typeof (weather as Weather).main.temp === "number" &&
-    typeof (weather as Weather).main.temp_max === "number" &&
-    typeof (weather as Weather).main.temp_min === "number"
-  );
-}
+// function isWeatherResponse(weather: unknown): weather is Weather {
+//   return (
+//     Boolean(weather) &&
+//     typeof weather === "object" &&
+//     typeof (weather as Weather).name === "string" &&
+//     typeof (weather as Weather).main.temp === "number" &&
+//     typeof (weather as Weather).main.temp_max === "number" &&
+//     typeof (weather as Weather).main.temp_min === "number"
+//   );
+// }
+
+// Zod
+const Weather = z.object({
+  name: z.string(),
+  main: z.object({
+    temp: z.number(),
+    temp_max: z.number(),
+    temp_min: z.number(),
+  }),
+});
+
+type Weather = z.infer<typeof Weather>;
 
 const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
 
@@ -28,13 +41,17 @@ export default function useWeather() {
 
       const { data: weatherResult } = await axios(weatherUrl);
 
+      // TYPE ZOD
+      // const result = Weather.safeParse(weatherResult);
+      // console.log(result);
+
       // TYPE GUARDS
-      const result = isWeatherResponse(weatherResult);
-      console.log(result);
-      if (result) {
-        console.log(weatherResult.name);
-        console.log(weatherResult.main);
-      }
+      // const result = isWeatherResponse(weatherResult);
+      // console.log(result);
+      // if (result) {
+      //   console.log(weatherResult.name);
+      //   console.log(weatherResult.main);
+      // }
     } catch (error) {
       console.log(error);
     }
