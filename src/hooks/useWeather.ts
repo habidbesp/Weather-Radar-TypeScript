@@ -2,7 +2,7 @@ import axios from "axios";
 import { z } from "zod";
 // import { object, string, number, InferOutput, parse } from "valibot";
 import type { SearchType } from "../types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 // TYPE GUARD OR ASSERTION
 // function isWeatherResponse(weather: unknown): weather is Weather {
@@ -38,25 +38,38 @@ export type Weather = z.infer<typeof Weather>;
 // });
 // type Weather = InferOutput<typeof WeatherSchema>;
 
+const initialWeatherState = {
+  name: "",
+  main: {
+    temp: 0,
+    temp_max: 0,
+    temp_min: 0,
+  },
+};
+
 export default function useWeather() {
-  const [weather, setWeather] = useState<Weather>({
-    name: "",
-    main: {
-      temp: 0,
-      temp_max: 0,
-      temp_min: 0,
-    },
-  });
+  const [weather, setWeather] = useState<Weather>(initialWeatherState);
+  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   const fetchWeather = async (search: SearchType) => {
     const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
+    setLoading(true);
+    setWeather(initialWeatherState);
+    setNotFound(false);
     try {
       const { city, country } = search;
       const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city},${country}&appid=${apiKey}`;
 
       const { data } = await axios(geoUrl);
-      const { lat, lon } = data[0];
 
+      if (!data[0]) {
+        console.log("clima no encontrado");
+        setNotFound(true);
+        return;
+      }
+
+      const { lat, lon } = data[0];
       const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
 
       const { data: weatherResult } = await axios(weatherUrl);
@@ -74,7 +87,6 @@ export default function useWeather() {
 
       // TYPE ZOD
       const result = Weather.safeParse(weatherResult);
-      console.log(result);
 
       if (result.success) {
         setWeather(result.data);
@@ -86,7 +98,17 @@ export default function useWeather() {
       // const result = parse(WeatherSchema, weatherResult);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
-  return { weather, fetchWeather };
+
+  const hasWeatherData = useMemo(() => weather.name, [weather]);
+  return {
+    weather,
+    loading,
+    notFound,
+    fetchWeather,
+    hasWeatherData,
+  };
 }
