@@ -53,18 +53,17 @@ export default function useWeather() {
   const [notFound, setNotFound] = useState(false);
 
   const fetchWeather = async (search: SearchType) => {
-    const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
+    const apiKey = import.meta.env.VITE_OPEN_WEATHER_API;
     setLoading(true);
     setWeather(initialWeatherState);
     setNotFound(false);
     try {
       const { city, country } = search;
-      const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city},${country}&appid=${apiKey}`;
+      const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city},${country}&appid=${apiKey}`;
 
       const { data } = await axios(geoUrl);
 
       if (!data[0]) {
-        console.log("clima no encontrado");
         setNotFound(true);
         return;
       }
