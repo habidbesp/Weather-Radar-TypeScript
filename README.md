@@ -28,6 +28,7 @@ The project was developed using:
 - **CSS Modules**: Employed for modular and scoped CSS, allowing for better organization and avoiding class name collisions.
 - **Spinkit**: A CSS spinner library by Tobias Ahlin, used to enhance the user experience with visually appealing loading indicators.
 - **Axios**: For making HTTP requests to the OpenWeatherMap API, ensuring efficient data retrieval.
+- **vercel**: A platform for deploying and hosting web applications quickly and efficiently. It offers automatic deployment, preview of changes, and a global CDN to enhance performance.
 
 ## How to Run the Project
 
